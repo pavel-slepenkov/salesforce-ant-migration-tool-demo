@@ -1,0 +1,45 @@
+<!--
+@author:    Pavel Slepenkov (Pavel_Slepenkov@epam.com)
+@date:      10 Aug 2013
+
+it's very basic but working for the most of typical Force.com projects example.
+just copy it to the project folder on same level with \src anf fill 
+build.properties with right values
+
+-->
+<project name="Demo usage of Salesforce Ant Migration Tool" default="testDeploy" basedir="." xmlns:sf="antlib:com.salesforce">
+
+    <!-- default properties -->
+    <property file="build.properties"/>
+    <property environment="env"/>
+    <property name="target" value="src" />
+
+
+    <target name="testDeploy">
+      <!-- Verify the abbility to upload the contents of the "src" package -->
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}" deployRoot="src" checkOnly="true"/>
+    </target>
+
+    <target name="deploy">
+      <!-- Upload the contents of the "src" directory and run all test -->
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}" deployRoot="scr" runAllTests="true">
+      </sf:deploy>
+    </target>
+
+    <!-- retriev metadata from org into local project folder \src (by default), but it might be overridden in command line -->
+    <target name="retrieve" description="Retrieves metadata from ${sf.env} to ${target}" >
+      <mkdir dir="${target}"/>
+      <sf:retrieve username="${sf.username}${sf.env}" password="${sf.password}" serverurl="${sf.serverurl}" retrieveTarget="${target}" unpackaged="package.xml"/>
+    </target>
+
+    <!-- Retrieve the information of all items of a particular metadata type -->
+    <target name="listMetadata">
+      <sf:listMetadata username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" metadataType="${sf.metadataType}"/>
+    </target>
+
+    <!-- Retrieve the information on all supported metadata type -->
+    <target name="describeMetadata">
+      <sf:describeMetadata username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}"/>
+    </target>
+
+</project>

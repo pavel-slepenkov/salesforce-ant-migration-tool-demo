@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>DemoClass1</members>
+        <members>DemoClass2</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>DemoPage</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>DemoTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>bootstrap</members>
+        <name>StaticResource</name>
+    </types>
+    <version>28.0</version>
+</Package>

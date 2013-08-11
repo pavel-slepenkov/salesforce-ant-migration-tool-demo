@@ -17,7 +17,7 @@ build.properties with right values
 
     <target name="testDeploy">
       <!-- Verify the abbility to upload the contents of the "src" package -->
-      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}" deployRoot="src" checkOnly="true"/>
+      <sf:deploy username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" maxPoll="${sf.maxPoll}" deployRoot="src" checkOnly="true" runAllTests="true"/>
     </target>
 
     <target name="deploy">

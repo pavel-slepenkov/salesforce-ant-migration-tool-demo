@@ -7,4 +7,4 @@ Here you can find a few folders, the main are:
 This demo will be updated from time to time
 
 You can read more about ant migration tool here:
-blog.pavelslepenkov.info
+http://blog.pavelslepenkov.info/?cat=9

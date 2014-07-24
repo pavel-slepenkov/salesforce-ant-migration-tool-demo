@@ -1,0 +1,366 @@
+<html>
+<head>
+<title>Force.com Migration Tool</title>
+</head>
+
+<body>
+
+ <h1>Force.com Migration Tool</h1>
+    <p>This is the Winter '12 version of the Force.com Migration Tool. The Force.com Migration Tool is a Java/Ant-based command-line utility for moving metadata between a local directory and
+        a Salesforce organization. For more information, see the <a href="http://wiki.developerforce.com/page/Migration_Tool_Guide#Official_Documentation">Force.com Migration Tool Guide</a>.</p>
+
+<h2>Installation</h2>
+
+<ol>
+ <li>Download <a
+     href="http://ant.apache.org/bindownload.cgi">Apache Ant</a>, version 1.6
+     or newer. </li>
+ <li>To ensure that the
+     appropriate environment variables are set for Ant, follow the instructions
+     in <a href="http://ant.apache.org/manual/install.html">Installing Ant</a>.
+     </li>
+ <li>From the distribution zip
+     file, copy <code>ant-salesforce.jar</code>
+     into your Ant installation <code>lib</code>
+     directory. </li>
+ <li>If your network requires an
+     HTTP proxy, follow the instructions in <a
+     href="http://ant.apache.org/manual/proxy.html">Proxy Configuration</a>. </li>
+</ol>
+
+<h2>Deploying Sample Metadata</h2>
+
+<ol>
+ <li>Go to the <a href="sample">sample</a>
+     subdirectory. </li>
+ <li>Open the <a
+     href="sample/build.properties">build.properties</a> file and make the following substitutions:
+<ul> <li><code>sf.username</code> - a
+     valid Salesforce username</li>
+<li><code>sf.password</code> - a
+     valid Salesforce password<br/>
+If you are using a security token,
+     paste the 25-digit token value to the end of your password.</li>
+<li><code>sf.serverurl</code> - the salesforce server URL <br/>A sandbox or Developer Edition organization is strongly recommended for testing. </ul></li>
+ <li>Open a command shell and navigate to the <code>sample</code> subdirectory.</li>
+ <li>Run <code>ant test</code>. <br/>
+This will deploy sample metadata into your organization and retrieve it again into a local directory. Look for the custom object <code>myobj</code> and its corresponding page layout in your organization, and go to <code>sample/retrieveOutput</code> to see the results of the retrieve.</li>
+</ol>
+<p>The sample <code>build.xml</code> contains other targets illustrating various deploy and retrieve options. Run <code>ant -p</code> to list the build targets.</p>
+<h2>Using Deploy and Retrieve</h2>
+
+<p>Use the deploy and retrieve tasks to create, update, and
+retrieve metadata. This reference lists the attributes available for each task.</p>
+
+<h3>Deploy</h3>
+
+<p>The <b>deploy</b> task uses a set of Salesforce metadata
+components on your system to create or update the corresponding objects in your organization.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+<dd>Required. The Salesforce username
+for login.</dd>
+
+<dt><b>password</b></dt>
+
+<dd>Required. The Salesforce password
+for login. If you are using a security token, paste the 25-digit token value to
+the end of your password.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'. This is useful for working against
+the sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>pollWaitMillis</b></dt>
+
+<dd>Optional. Defaults to 10000. The
+number of milliseconds to wait between each poll of Salesforce to retrieve
+the results of the deploy. </dd>
+
+<dt><b>checkOnly</b></dt>
+
+<dd>Optional (true/false). Defaults to false. Only
+check the validity of the deployed files, don't make any changes to
+Salesforce. </dd>
+
+<dt><b>maxPoll</b></dt>
+
+<dd>Optional. Defaults to 200. The number
+of times to poll Salesforce for the results of the task. </dd>
+
+<dt><b>purgeOnDelete</b></dt>
+
+<dd>Optional (true/false). Defaults to false. If set to true, 
+the deleted components in the destructiveChanges.xml manifest file aren't stored 
+in the Recycle Bin. Instead, they become immediately eligible for deletion.  
+Do not set this argument for deployment to production organizations.
+ </dd>
+
+<dt><b>deployRoot</b></dt>
+
+<dd>Required if 'zipFile' is not specified. Specifies the root of the directory tree of files
+to deploy. See Working
+with the Zip File in the <a href="http://www.salesforce.com/us/developer/docs/api_meta/index.htm">Metadata API Developer's Guide</a> for more information. </dd>
+
+<dt><b>zipFile</b></dt>
+
+<dd>Required if 'deployRoot' is not specified. Specifies the path of the metadata zip file to be deployed.
+Either zipFile or deployRoot must be specified.
+See Working
+with the Zip File in the <a href="http://www.salesforce.com/us/developer/docs/api_meta/index.htm">Metadata API Developer's Guide</a> for more
+information.</dd>
+
+<dt><b>singlePackage</b></dt>
+
+<dd>Optional (true/false). Defaults to false.
+Declares that the deployRoot/zipFile points to a directory structure with a single
+package, as opposed to a set of packages. </dd>
+
+<dt><b>allowMissingFiles</b></dt>
+
+<dd>Optional (true/false). Defaults to false. Specifies whether a deploy succeeds
+even if files that are specified in package.xml are not in the zip file.
+Do not set this argument for deployment to production organizations.</dd>
+
+<dt><b>autoUpdatePackage</b></dt>
+
+<dd>Optional (true/false). Defaults to false. Specifies whether a deploy should continue
+even if files present in the zip file are not specified in package.xml.
+Do not set this argument for deployment to production organizations.</dd>
+
+<dt><b>rollbackOnError</b></dt>
+
+<dd>Optional (true/false). Defaults to true.
+Indicates whether any failure causes a complete rollback (true) or not (false). If false,
+whatever set of actions can be performed without errors are performed, and errors are returned
+for the remaining actions. This parameter must be set to true if you are deploying to a production organization.</dd>
+
+<dt><b>ignoreWarnings</b></dt>
+
+<dd>Optional (true/false). Defaults to false.
+This setting indicates that a deployment should succeed even if there are warnings (true) or that one or more warnings 
+will cause the deployment to fail and roll back (false). If there are errors, as opposed to warnings, the deployment will always fail and roll back.</dd>
+
+<dt><b>runAllTests</b></dt>
+
+ <dd>Optional (true/false). Defaults to false. If set to true, all Apex tests are run after deploy. For deployment to a production organization, all tests,
+ except for those that originate from installed managed packages, are automatically run regardless of this argument. If any of these tests
+ fail when the rollbackOnError parameter is set to true, the deployment is rolled back and no changes are made to your organization. </dd>
+
+<dt><b>runTest</b></dt>
+
+<dd>Optional child elements. A list of Apex classes containing tests run after deploy.
+    If any of these tests fail when the rollbackOnError parameter is set to true, the deployment is rolled back and no changes
+are made to your organization.  </dd>
+
+<dt><b>logType</b></dt>
+<dd>Optional.  Defaults to 'None'. The debug logging level for tests.
+Valid options are 'None', 'Debugonly', 'Db', 'Profiling', 'Callout', and 'Detail'.</dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+</dl>
+
+<h3>Retrieve</h3>
+
+<p>The <b>retrieve</b> task downloads a set of metadata components from your organization into
+a set of local XML files.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+<dd>Required. The Salesforce username
+for login.</dd>
+
+<dt><b>password</b></dt>
+
+<dd>Required. The Salesforce password
+for login. If you are using a security token, paste the 25-digit token value to
+the end of your password.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'. This is useful for working against a
+sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>retrieveTarget</b></dt>
+
+<dd>Required. The root of the directory
+structure into which the metadata files are retrieved. </dd>
+
+<dt><b>packageNames</b></dt>
+
+<dd>Required if 'unpackaged' is not specified. A comma-separated list of the names of
+the packages to retrieve. </dd>
+
+<dt><b>apiVersion</b></dt>
+
+<dd>Optional. Defaults to 31.0. The API version to use for the retrieved metadata files.</dd>
+
+<dt><b>pollWaitMillis</b></dt>
+
+<dd>Optional. Defaults to 10000.
+Number of milliseconds to wait between each poll of Salesforce to retrieve
+the results. </dd>
+
+<dt><b>maxPoll</b></dt>
+
+    <dd>Optional. Defaults to 20. The number
+of times to poll Salesforce for the results of the task. </dd>
+
+<dt><b>singlePackage</b></dt>
+
+<dd>Optional (true/false). Defaults to true.
+If retrieving multiple packages, this must be false.  If set to false, the retrieved zip file
+includes an extra top-level directory with a subdirectory for each package.</dd>
+
+<dt><b>unpackaged</b></dt>
+
+<dd>Required if 'packageNames' is not specified. The name of a
+manifest file that specifies the components to retrieve. </dd>
+
+<dt><b>unzip</b></dt>
+
+<dd>Optional (true/false). Defaults to true. If true, the retrieved components are unzipped.
+If false, the retrieved components are saved as a zip file in the retrieveTarget directory. </dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+
+</dl>
+
+<h3>BulkRetrieve</h3>
+
+<p>The <b>bulkRetrieve</b> task downloads a large number of metadata objects of a particular type from your organization into a set of local files.
+It automatically generates the list of objects to be retrieved and batches the retrieve process based on the <b>batchSize</b> attribute. </p>
+
+<dl>
+<dt><b>username</b></dt>
+
+<dd>Required. The Salesforce username
+for login.</dd>
+
+<dt><b>password</b></dt>
+
+<dd>Required. The Salesforce password for login. If you are using a security token,
+paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'.
+This is useful for working against a sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>retrieveTarget</b></dt>
+
+<dd>Required. The root of the directory
+structure into which the metadata files are retrieved. </dd>
+
+<dt><b>metadataType</b></dt>
+<dd>Required. Name of metadata type to be retrieved, such as CustomObject or Report. </dd>
+
+<dt><b>containingFolder</b></dt>
+<dd>Optional. If the metadata is contained in a folder, the containingFolder should
+be the name of the folder from which the contents are retrieved. </dd>
+
+<dt><b>batchSize</b></dt>
+
+<dd>Optional. Defaults to 10. The number of items to retrieve while doing multi-part retrieve.</dd>
+
+<dt><b>apiVersion</b></dt>
+
+<dd>Optional. Defaults to 31.0. The API version to use for the retrieved metadata files.</dd>
+
+<dt><b>maxPoll</b></dt>
+
+    <dd>Optional. Defaults to 20. The number
+of times to poll Salesforce for the results of the task. </dd>
+
+<dt><b>unzip</b></dt>
+
+    <dd>Optional (true/false). Defaults to true. If true, the retrieved components are unzipped.
+        If false, the retrieved components are saved as a zip file in the retrieveTarget directory.  </dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+
+</dl>
+
+<h3>ListMetadata</h3>
+
+    <p>The <b>listMetadata</b> task gets detail information about metadata components of a particular type. This call is useful when you want to identify individual components in
+        your manifest file for the <b>retrieve</b> task or if you want a
+        high-level view of particular components in your organization.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+<dd>Required. The Salesforce username
+for login.</dd>
+
+<dt><b>password</b></dt>
+
+<dd>Required. The Salesforce password for login. If you are using a security token,
+paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'.
+This is useful for working against a sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>metadataType</b></dt>
+    <dd>Required. Name of metadata type to be retrieved, such as CustomObject or Report.</dd>
+
+<dt><b>folder</b></dt>
+    <dd>The folder associated with the component. This field is required for components that use folders, such as Dashboard, Document, EmailTemplate, or Report.</dd>
+
+<dt><b>apiVersion</b></dt>
+
+<dd>Optional. Defaults to 31.0. Returns information about the metadata components available in the API version specified.</dd>
+
+<dt><b>resultFilePath</b></dt>
+
+<dd>Optional. Specifies the path of the output file where results are stored. The default output is the console. </dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+
+</dl>
+
+<h3>DescribeMetadata</h3>
+
+<p>The <b>describeMetadata</b> task gets detail information about the metadata types that are supported in a particular API version. See the <a href="http://www.salesforce.com/us/developer/docs/api_meta/index.htm">Metadata API Developer's Guide</a> for more
+information about metadata types.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+<dd>Required. The Salesforce username
+for login.</dd>
+
+<dt><b>password</b></dt>
+
+<dd>Required. The Salesforce password for login. If you are using a security token,
+paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'.
+This is useful for working against a sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>apiVersion</b></dt>
+<dd>Optional. Defaults to 31.0. Describes only the metadata components available in the API version specified.</dd>
+
+<dt><b>resultFilePath</b></dt>
+
+<dd>Optional. Specifies the path of the output file where results are stored. The default output is the console. </dd>
+
+</dl>
+</body>
+</html>

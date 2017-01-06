@@ -9,5 +9,5 @@
         <members>SampleAccountTrigger</members>
         <name>ApexTrigger</name>
     </types>
-    <version>31.0</version>
+    <version>39.0</version>
 </Package>

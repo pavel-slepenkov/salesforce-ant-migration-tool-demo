@@ -6,7 +6,7 @@
 <body>
 
  <h1>Force.com Migration Tool</h1>
-    <p>This is the Winter '12 version of the Force.com Migration Tool. The Force.com Migration Tool is a Java/Ant-based command-line utility for moving metadata between a local directory and
+    <p>This is the Winter '16 version of the Force.com Migration Tool. The Force.com Migration Tool is a Java/Ant-based command-line utility for moving metadata between a local directory and
         a Salesforce organization. For more information, see the <a href="http://wiki.developerforce.com/page/Migration_Tool_Guide#Official_Documentation">Force.com Migration Tool Guide</a>.</p>
 
 <h2>Installation</h2>
@@ -18,15 +18,14 @@
  <li>To ensure that the
      appropriate environment variables are set for Ant, follow the instructions
      in <a href="http://ant.apache.org/manual/install.html">Installing Ant</a>.
-     </li>
- <li>From the distribution zip
-     file, copy <code>ant-salesforce.jar</code>
-     into your Ant installation <code>lib</code>
-     directory. </li>
- <li>If your network requires an
+</li>
+<li>If your network requires an
      HTTP proxy, follow the instructions in <a
      href="http://ant.apache.org/manual/proxy.html">Proxy Configuration</a>. </li>
 </ol>
+    <u>Note</u>: The Force.com Migration Tool uses the <code>ant-salesforce.jar</code> file that's in the distribution zip. 
+    If you have another version of <code>ant-salesforce.jar</code> in the Ant installation <code>lib</code> directory, delete it to ensure that the latest version from the zip file is used. 
+    You don't need to copy this jar file to your Ant installation <code>lib</code> directory.
 
 <h2>Deploying Sample Metadata</h2>
 
@@ -40,8 +39,10 @@
 <li><code>sf.password</code> - a
      valid Salesforce password<br/>
 If you are using a security token,
-     paste the 25-digit token value to the end of your password.</li>
-<li><code>sf.serverurl</code> - the salesforce server URL <br/>A sandbox or Developer Edition organization is strongly recommended for testing. </ul></li>
+paste the 25-digit token value to the end of your password.</li>
+<li><code>sf.serverurl</code> - the Salesforce server URL <br/>A sandbox or Developer Edition organization is strongly recommended for testing.</li></ul>
+     <u>Note</u>: If you want to use a Salesforce session for authentication instead of a username and password, uncomment the <code>sf.sessionId</code> property and provide a valid session ID. Also,
+     make sure to comment out the <code>sf.username</code> and <code>sf.password</code> properties.</li>
  <li>Open a command shell and navigate to the <code>sample</code> subdirectory.</li>
  <li>Run <code>ant test</code>. <br/>
 This will deploy sample metadata into your organization and retrieve it again into a local directory. Look for the custom object <code>myobj</code> and its corresponding page layout in your organization, and go to <code>sample/retrieveOutput</code> to see the results of the retrieve.</li>
@@ -60,15 +61,20 @@ components on your system to create or update the corresponding objects in your 
 <dl>
 <dt><b>username</b></dt>
 
-<dd>Required. The Salesforce username
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
 for login.</dd>
 
 <dt><b>password</b></dt>
 
-<dd>Required. The Salesforce password
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password
 for login. If you are using a security token, paste the 25-digit token value to
 the end of your password.</dd>
 
+<dt><b>sessionId</b></dt>
+
+<dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
+    
 <dt><b>serverurl</b></dt>
 
 <dd>Optional. Defaults to 'https://login.salesforce.com'. This is useful for working against
@@ -144,17 +150,27 @@ for the remaining actions. This parameter must be set to true if you are deployi
 This setting indicates that a deployment should succeed even if there are warnings (true) or that one or more warnings 
 will cause the deployment to fail and roll back (false). If there are errors, as opposed to warnings, the deployment will always fail and roll back.</dd>
 
-<dt><b>runAllTests</b></dt>
+<dt><b>testLevel</b></dt>
 
- <dd>Optional (true/false). Defaults to false. If set to true, all Apex tests are run after deploy. For deployment to a production organization, all tests,
- except for those that originate from installed managed packages, are automatically run regardless of this argument. If any of these tests
- fail when the rollbackOnError parameter is set to true, the deployment is rolled back and no changes are made to your organization. </dd>
+<dd>Optional. Specifies which tests are run as part of a deployment. The test level is enforced regardless of the
+    types of components that are present in the deployment package. Valid values are:
+    <ul>
+        <li><b>NoTestRun</b>&mdash;No tests are run. This option applies only to deployments to development environments, such as sandbox, Developer Edition, or trial organizations. 
+            This option is the default for development environments.</li>
+        <li><b>RunSpecifiedTests</b>&mdash;Only the tests that you specify in the <b>runTest</b> option are run. Code coverage requirements differ from the default coverage requirements when using this option. 
+            Each class and trigger in the deployment package must be covered by the executed tests for a minimum of 75% code coverage.</li>
+        <li><b>RunLocalTests</b>&mdash;All tests in your organization are run, except the ones that originate from installed managed packages.</li>
+        <li><b>RunAllTestsInOrg</b>&mdash;All tests are run. The tests include all tests in your organization, including tests of managed packages.</li>
+    </ul>
+</dd>
 
 <dt><b>runTest</b></dt>
 
 <dd>Optional child elements. A list of Apex classes containing tests run after deploy.
-    If any of these tests fail when the rollbackOnError parameter is set to true, the deployment is rolled back and no changes
-are made to your organization.  </dd>
+    For production deployments, the specified tests must cover each Apex class and trigger in the deployment
+    package for a minimum of 75% code coverage.
+    If any of these tests fail or doesn't meet code coverage requirements, and if the rollbackOnError parameter is set to true, 
+    the deployment is rolled back and no changes are made to your organization.</dd>
 
 <dt><b>logType</b></dt>
 <dd>Optional.  Defaults to 'None'. The debug logging level for tests.
@@ -163,6 +179,59 @@ Valid options are 'None', 'Debugonly', 'Db', 'Profiling', 'Callout', and 'Detail
 <dt><b>trace</b></dt>
 <dd>Optional (true/false). Defaults to false.
 Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+</dl>
+    
+<h3>DeployRecentValidation</h3>
+
+<p>The <b>deployRecentValidation</b> task deploys a recent validation by using the validation ID. The validation must have run successfully and all tests must have passed in the last four days.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+    <dd>Required if 'sessionId' isn't specified.. The Salesforce username
+    for login.</dd>
+
+<dt><b>password</b></dt>
+
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password
+    for login. If you are using a security token, paste the 25-digit token value to
+    the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'. This is useful for working against
+    the sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>recentValidationId</b></dt>
+
+<dd>Required. The ID of a validation that was successfully run in the last four days.</dd>
+
+<dt><b>rollbackOnError</b></dt>
+
+<dd>Optional (true/false). Defaults to true.
+    Indicates whether any failure causes a complete rollback (true) or not (false). If false,
+    whatever set of actions can be performed without errors are performed, and errors are returned
+    for the remaining actions. This parameter must be set to true if you are deploying to a production organization.</dd>
+
+<dt><b>maxPoll</b></dt>
+
+<dd>Optional. Defaults to 200. The number
+    of times to poll Salesforce for the results of the task. </dd>
+
+<dt><b>pollWaitMillis</b></dt>
+
+<dd>Optional. Defaults to 10000. The
+    number of milliseconds to wait between each poll of Salesforce to retrieve
+    the results of the deploy. </dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+    Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
 </dl>
 
 <h3>Retrieve</h3>
@@ -173,14 +242,19 @@ a set of local XML files.</p>
 <dl>
 <dt><b>username</b></dt>
 
-<dd>Required. The Salesforce username
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
 for login.</dd>
 
 <dt><b>password</b></dt>
 
-<dd>Required. The Salesforce password
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password
 for login. If you are using a security token, paste the 25-digit token value to
 the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
 
 <dt><b>serverurl</b></dt>
 
@@ -199,7 +273,7 @@ the packages to retrieve. </dd>
 
 <dt><b>apiVersion</b></dt>
 
-<dd>Optional. Defaults to 31.0. The API version to use for the retrieved metadata files.</dd>
+<dd>Optional. Defaults to 39.0. The API version to use for the retrieved metadata files.</dd>
 
 <dt><b>pollWaitMillis</b></dt>
 
@@ -242,13 +316,18 @@ It automatically generates the list of objects to be retrieved and batches the r
 <dl>
 <dt><b>username</b></dt>
 
-<dd>Required. The Salesforce username
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
 for login.</dd>
 
 <dt><b>password</b></dt>
 
-<dd>Required. The Salesforce password for login. If you are using a security token,
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password for login. If you are using a security token,
 paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
 
 <dt><b>serverurl</b></dt>
 
@@ -273,7 +352,7 @@ be the name of the folder from which the contents are retrieved. </dd>
 
 <dt><b>apiVersion</b></dt>
 
-<dd>Optional. Defaults to 31.0. The API version to use for the retrieved metadata files.</dd>
+<dd>Optional. Defaults to 39.0. The API version to use for the retrieved metadata files.</dd>
 
 <dt><b>maxPoll</b></dt>
 
@@ -291,6 +370,52 @@ Prints the SOAP requests and responses sent to Salesforce to the console. Note: 
 
 </dl>
 
+<h3>CancelDeploy</h3>
+
+<p>The <b>cancelDeploy</b> task cancels a deployment that's in progress or queued.</p>
+
+<dl>
+<dt><b>username</b></dt>
+
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
+    for login.</dd>
+
+<dt><b>password</b></dt>
+
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password
+    for login. If you are using a security token, paste the 25-digit token value to
+    the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
+
+<dt><b>serverurl</b></dt>
+
+<dd>Optional. Defaults to 'https://login.salesforce.com'. This is useful for working against
+    the sandbox instance on test.salesforce.com. </dd>
+
+<dt><b>requestId</b></dt>
+
+<dd>Required. The ID of an in-progress or queued deployment to cancel.</dd>
+
+<dt><b>maxPoll</b></dt>
+
+<dd>Optional. Defaults to 200. The number
+    of times to poll Salesforce for the results of the task. </dd>
+
+<dt><b>pollWaitMillis</b></dt>
+
+<dd>Optional. Defaults to 10000. The
+    number of milliseconds to wait between each poll of Salesforce to retrieve
+    the results of the deploy. </dd>
+
+<dt><b>trace</b></dt>
+<dd>Optional (true/false). Defaults to false.
+    Prints the SOAP requests and responses sent to Salesforce to the console. Note: This will show the user's password in plain text during login.</dd>
+</dl>
+
 <h3>ListMetadata</h3>
 
     <p>The <b>listMetadata</b> task gets detail information about metadata components of a particular type. This call is useful when you want to identify individual components in
@@ -300,13 +425,18 @@ Prints the SOAP requests and responses sent to Salesforce to the console. Note: 
 <dl>
 <dt><b>username</b></dt>
 
-<dd>Required. The Salesforce username
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
 for login.</dd>
 
 <dt><b>password</b></dt>
 
-<dd>Required. The Salesforce password for login. If you are using a security token,
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password for login. If you are using a security token,
 paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+    You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
 
 <dt><b>serverurl</b></dt>
 
@@ -321,7 +451,7 @@ This is useful for working against a sandbox instance on test.salesforce.com. </
 
 <dt><b>apiVersion</b></dt>
 
-<dd>Optional. Defaults to 31.0. Returns information about the metadata components available in the API version specified.</dd>
+<dd>Optional. Defaults to 39.0. Returns information about the metadata components available in the API version specified.</dd>
 
 <dt><b>resultFilePath</b></dt>
 
@@ -341,13 +471,18 @@ information about metadata types.</p>
 <dl>
 <dt><b>username</b></dt>
 
-<dd>Required. The Salesforce username
+    <dd>Required if 'sessionId' isn't specified. The Salesforce username
 for login.</dd>
 
 <dt><b>password</b></dt>
 
-<dd>Required. The Salesforce password for login. If you are using a security token,
+    <dd>Required if 'sessionId' isn't specified. The Salesforce password for login. If you are using a security token,
 paste the 25-digit token value to the end of your password.</dd>
+
+<dt><b>sessionId</b></dt>
+
+    <dd>Required if 'username' and 'password' aren't specified. The ID of an active Salesforce session.
+   You can use a session ID for authentication only when the username and password aren't defined in the <code>build.properties</code> file.</dd>
 
 <dt><b>serverurl</b></dt>
 
@@ -355,7 +490,7 @@ paste the 25-digit token value to the end of your password.</dd>
 This is useful for working against a sandbox instance on test.salesforce.com. </dd>
 
 <dt><b>apiVersion</b></dt>
-<dd>Optional. Defaults to 31.0. Describes only the metadata components available in the API version specified.</dd>
+<dd>Optional. Defaults to 39.0. Describes only the metadata components available in the API version specified.</dd>
 
 <dt><b>resultFilePath</b></dt>
 
